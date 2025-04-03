@@ -1,31 +1,32 @@
 const express = require("express");
 
 const app = express();
+const User = require("./models/user");
+const connectDB = require("./config/database.js");
 
-app.use("/test", (req, res) => {
-  res.send("Hello from the sever");
+app.post("/signup", async (req, res) => {
+  const user = new User({
+    firstName: "Mithilesh",
+    lastName: "Kumar",
+    email: "mithilesh@gmail.com",
+    password: "123456",
+  });
+  try {
+    await user.save();
+    res.send("User created");
+  } catch (err) {
+    console.log(err);
+    res.status(400).send("Error saving the user");
+  }
 });
 
-app.get("/user", (req, res) => {
-  res.send({ firstName: "Mithilesh", LastName: "Deore" });
-});
-
-app.delete("/user", (req, res) => {
-  res.send("User deleted");
-});
-
-app.patch("/user", (req, res) => {
-  res.send("User updated");
-});
-
-app.post("/user", (req, res) => {
-  res.send("Data successfully saved to DB");
-});
-
-app.use("/hello", (req, res) => {
-  res.send("Hello Hello");
-});
-
-app.listen(3000, () => {
-  console.log("Server is successfully on port on 3000...");
-});
+connectDB()
+  .then(() => {
+    console.log("Connected to MongoDB");
+    app.listen(3000, () => {
+      console.log("Server is successfully on port on 3000...");
+    });
+  })
+  .catch((err) => {
+    console.error("Database cannot be connected");
+  });
