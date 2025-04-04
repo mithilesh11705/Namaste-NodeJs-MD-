@@ -41,6 +41,50 @@ app.post("/signup", async (req, res) => {
   }
 });
 
+app.delete("/delete", async (req, res) => {
+  const userId = req.body.userId;
+
+  try {
+    const user = await User.findByIdAndDelete({ _id: userId });
+    res.send("User Deleted Successfully");
+  } catch (err) {
+    res.status(400).send("Something went wrong");
+  }
+});
+
+//Update data of the User
+app.patch("/update/:userId", async (req, res) => {
+  const data = req.body;
+  const userId = req.params?.userId;
+
+  try {
+    const ALLOWED_UPDATES = [
+      "userId",
+      "skills",
+      "photourl",
+      "about",
+      "gender",
+      "age",
+    ];
+    const isUpdateAllowed = Object.keys(data).every((k) =>
+      ALLOWED_UPDATES.includes(k)
+    );
+
+    if (!isUpdateAllowed) {
+      throw new Error("Update not allowed");
+    }
+    if (data?.skills.length > 10) {
+      throw new Error("Skills cannot be more than 10");
+    }
+    const user = await User.findByIdAndUpdate({ _id: userId }, data, {
+      runValidators: true,
+    });
+    res.send("User updated Successfully");
+  } catch (err) {
+    res.status(400).send("Something went wrong");
+  }
+});
+
 connectDB()
   .then(() => {
     console.log("Connected to MongoDB");
