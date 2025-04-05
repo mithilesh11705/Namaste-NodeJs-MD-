@@ -1,11 +1,11 @@
 const express = require("express");
-
+const bcrypt = require("bcrypt");
 const app = express();
 const User = require("./models/user");
 const connectDB = require("./config/database.js");
 
 app.use(express.json()); //json middelware
-
+const { validateSignup } = require("./utils/validations");
 //get user by  email
 
 app.get("/user", async (req, res) => {
@@ -31,13 +31,28 @@ app.get("/feed", async (req, res) => {
 });
 
 app.post("/signup", async (req, res) => {
-  const user = new User(req.body);
+  //Validation Of data
   try {
+    validateSignup(req);
+
+    //Encrypt the password
+    const { firstName, lastName, email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+
+    //Store the data in Database
+
+    const user = new User({
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+    });
+
     await user.save();
     res.send("User created");
   } catch (err) {
     console.log(err);
-    res.status(400).send("Error saving the user");
+    res.status(400).send("Error : " + err.message);
   }
 });
 
@@ -85,6 +100,21 @@ app.patch("/update/:userId", async (req, res) => {
   }
 });
 
+app.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    // if (!validate.isEmail(email)) return res.status(400).send("Invalid Email");
+
+    const user = await User.findOne({ email: email });
+    if (!user) throw new eRROR("Invalid Credentials");
+
+    const isPassword = await bcrypt.compare(password, user.password);
+    if (isPassword) res.send("Login Successfull");
+    else throw new Error("Password Is not correct");
+  } catch (err) {
+    res.status(400).send("Something went wrong: " + err.message);
+  }
+});
 connectDB()
   .then(() => {
     console.log("Connected to MongoDB");
