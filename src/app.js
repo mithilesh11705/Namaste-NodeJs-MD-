@@ -3,9 +3,16 @@ const bcrypt = require("bcrypt");
 const app = express();
 const User = require("./models/user");
 const connectDB = require("./config/database.js");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
+const {userAuth}=require("./middlewares/auth.js")
+
+
 
 app.use(express.json()); //json middelware
 const { validateSignup } = require("./utils/validations");
+
+app.use(cookieParser());
 //get user by  email
 
 app.get("/user", async (req, res) => {
@@ -64,7 +71,7 @@ app.delete("/delete", async (req, res) => {
     res.send("User Deleted Successfully");
   } catch (err) {
     res.status(400).send("Something went wrong");
-  }
+  } 
 });
 
 //Update data of the User
@@ -106,15 +113,62 @@ app.post("/login", async (req, res) => {
     // if (!validate.isEmail(email)) return res.status(400).send("Invalid Email");
 
     const user = await User.findOne({ email: email });
-    if (!user) throw new eRROR("Invalid Credentials");
+    if (!user) throw new ERROR("Invalid Credentials");
 
     const isPassword = await bcrypt.compare(password, user.password);
-    if (isPassword) res.send("Login Successfull");
-    else throw new Error("Password Is not correct");
+
+    if (isPassword) {
+      //Create a JWT Token
+     const token=await user.getJwt();
+      //Add the token to cookie and send the
+
+      // response back to the user
+
+      res.cookie("token", token);
+      console.log(token);
+      res.send("Login Successfull");
+    } else throw new Error("Password Is not correct");
   } catch (err) {
     res.status(400).send("Something went wrong: " + err.message);
   }
 });
+
+app.get("/profile",userAuth, async (req, res) => {
+  try {
+    const cookies = req.cookies;
+
+    const { token } = cookies;
+    if (!token) {
+      throw new Error("Invalid Token");
+    }
+    const decodedMessage = await jwt.verify(token, "Dekdbjcpajsj!5354");
+
+    console.log(decodedMessage);
+    const { _id } = decodedMessage;
+
+    const user = req.user;
+    if (!user) {
+      throw new Error("User not present");
+    }
+
+    console.log(cookies);
+    res.send(user);
+  } catch (err) {
+    res.status(400).send("Something went wrong");
+  }
+});
+
+app.post("/sendConnectionRequest",userAuth,async (req,res)=>{
+  try{
+
+    const user=req.user;
+    console.log("Sending a Connection Request");
+    res.send("Connection Request Sent");
+}catch(err){
+  res.status(400).send("Something went wrong");
+}});
+
+
 connectDB()
   .then(() => {
     console.log("Connected to MongoDB");
