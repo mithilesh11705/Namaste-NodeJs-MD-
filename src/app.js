@@ -5,12 +5,18 @@ const User = require("./models/user");
 const connectDB = require("./config/database.js");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
-const {userAuth}=require("./middlewares/auth.js")
+const { userAuth } = require("./middlewares/auth.js");
+const { validateSignup } = require("./utils/validations");
 
+const authRouter = require("./routes/auth.js");
+const profileRouter = require("./routes/profile.js");
+const requestRouter = require("./routes/request.js");
 
+app.use("/", authRouter);
+app.use("/", profileRouter);
+app.use("/", requestRouter);
 
 app.use(express.json()); //json middelware
-const { validateSignup } = require("./utils/validations");
 
 app.use(cookieParser());
 //get user by  email
@@ -37,32 +43,6 @@ app.get("/feed", async (req, res) => {
   }
 });
 
-app.post("/signup", async (req, res) => {
-  //Validation Of data
-  try {
-    validateSignup(req);
-
-    //Encrypt the password
-    const { firstName, lastName, email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(req.body.password, 10);
-
-    //Store the data in Database
-
-    const user = new User({
-      firstName,
-      lastName,
-      email,
-      password: hashedPassword,
-    });
-
-    await user.save();
-    res.send("User created");
-  } catch (err) {
-    console.log(err);
-    res.status(400).send("Error : " + err.message);
-  }
-});
-
 app.delete("/delete", async (req, res) => {
   const userId = req.body.userId;
 
@@ -71,7 +51,7 @@ app.delete("/delete", async (req, res) => {
     res.send("User Deleted Successfully");
   } catch (err) {
     res.status(400).send("Something went wrong");
-  } 
+  }
 });
 
 //Update data of the User
@@ -106,68 +86,6 @@ app.patch("/update/:userId", async (req, res) => {
     res.status(400).send("Something went wrong");
   }
 });
-
-app.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    // if (!validate.isEmail(email)) return res.status(400).send("Invalid Email");
-
-    const user = await User.findOne({ email: email });
-    if (!user) throw new ERROR("Invalid Credentials");
-
-    const isPassword = await bcrypt.compare(password, user.password);
-
-    if (isPassword) {
-      //Create a JWT Token
-     const token=await user.getJwt();
-      //Add the token to cookie and send the
-
-      // response back to the user
-
-      res.cookie("token", token);
-      console.log(token);
-      res.send("Login Successfull");
-    } else throw new Error("Password Is not correct");
-  } catch (err) {
-    res.status(400).send("Something went wrong: " + err.message);
-  }
-});
-
-app.get("/profile",userAuth, async (req, res) => {
-  try {
-    const cookies = req.cookies;
-
-    const { token } = cookies;
-    if (!token) {
-      throw new Error("Invalid Token");
-    }
-    const decodedMessage = await jwt.verify(token, "Dekdbjcpajsj!5354");
-
-    console.log(decodedMessage);
-    const { _id } = decodedMessage;
-
-    const user = req.user;
-    if (!user) {
-      throw new Error("User not present");
-    }
-
-    console.log(cookies);
-    res.send(user);
-  } catch (err) {
-    res.status(400).send("Something went wrong");
-  }
-});
-
-app.post("/sendConnectionRequest",userAuth,async (req,res)=>{
-  try{
-
-    const user=req.user;
-    console.log("Sending a Connection Request");
-    res.send("Connection Request Sent");
-}catch(err){
-  res.status(400).send("Something went wrong");
-}});
-
 
 connectDB()
   .then(() => {
