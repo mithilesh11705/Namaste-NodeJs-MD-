@@ -77,9 +77,9 @@ requestRouter.post(
 
       const connectionRequest = await ConnectionRequest.findById({
         _id: requestId,
-        fromUserId: loggedUser._id,
+        toUserId: loggedUser._id,
         status: "interested",
-      });
+      }); 
       if (!connectionRequest) {
         return res.status(404).json({
           message: "Connection Request Not Found",

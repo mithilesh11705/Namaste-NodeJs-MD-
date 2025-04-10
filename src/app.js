@@ -24,27 +24,27 @@ app.use(express.json()); //json middelware
 app.use(cookieParser());
 //get user by  email
 
-app.get("/user", async (req, res) => {
-  const userEmail = req.body.email;
+// app.get("/user", async (req, res) => {
+//   const userEmail = req.body.email;
 
-  try {
-    const user = await User.findOne({ email: userEmail });
-    if (user.length === 0) res.status(404).send("User Not Found");
-    else res.send(user);
-  } catch (err) {
-    res.status(400).send("Something went wrong");
-  }
-});
+//   try {
+//     const user = await User.findOne({ email: userEmail });
+//     if (user.length === 0) res.status(404).send("User Not Found");
+//     else res.send(user);
+//   } catch (err) {
+//     res.status(400).send("Something went wrong");
+//   }
+// });
 
 //Feed API- get all the users from the database
-app.get("/feed", async (req, res) => {
-  try {
-    const users = await User.find({});
-    res.send(users);
-  } catch (err) {
-    res.status(400).send("Something went wrong");
-  }
-});
+// app.get("/feed", async (req, res) => {
+//   try {
+//     const users = await User.find({});
+//     res.send(users);
+//   } catch (err) {
+//     res.status(400).send("Something went wrong");
+//   }
+// });
 
 app.delete("/delete", async (req, res) => {
   const userId = req.body.userId;
