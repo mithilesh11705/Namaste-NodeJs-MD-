@@ -25,7 +25,10 @@ profileRouter.get("/profile",userAuth, async (req, res) => {
       }
   
       console.log(cookies);
-      res.send(user);
+      res.json({
+        message: "User Found",
+        data: user,
+      })
     } catch (err) {
       res.status(400).send("Something went wrong");
     }
