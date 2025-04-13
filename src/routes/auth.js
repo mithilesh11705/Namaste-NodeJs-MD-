@@ -61,7 +61,7 @@ authRouter.post("/login", async (req, res) => {
 
       res.cookie("token", token);
       console.log(token);
-      res.json({message:"User Logged In", data: user});
+      res.json({ message: "User Logged In", data: user });
     } else throw new Error("Password Is not correct");
   } catch (err) {
     res.status(400).send("Something went wrong: " + err.message);

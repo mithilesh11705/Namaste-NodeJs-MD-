@@ -24,13 +24,14 @@ const validateProfileEditData = (req) => {
     "gender",
   ];
 
-  const isEditAllowed = Object.keys(req.body).every(field =>
-    allowedEditFields.include(field)
+  const isEditAllowed = Object.keys(req.body).every((field) =>
+    allowedEditFields.includes(field)
   );
 
   return isEditAllowed;
 };
 
 module.exports = {
-  validateSignup,validateProfileEditData
+  validateSignup,
+  validateProfileEditData,
 };

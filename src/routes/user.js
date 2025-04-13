@@ -60,7 +60,7 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
 
     const loggedUserId = req.user._id;
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    let limit = parseInt(req.query.limit) || 10;
     limit=limit>50?50:limit;
 
     const connectionRequest = await ConnectionRequest.find({
@@ -86,7 +86,7 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
         { _id: { $ne: loggedUserId } },
       ],
     })
-      .select("fromuserId firstName lastName")
+      .select("fromuserId firstName lastName photourl email")
       .skip((page - 1) * limit)
       .limit(limit);
 

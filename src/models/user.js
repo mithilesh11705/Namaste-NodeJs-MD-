@@ -37,6 +37,7 @@ const userSchema = new mongoose.Schema(
     age: {
       type: Number,
       min: 18,
+      default:20,
     },
     gender: {
       type: String,
@@ -49,7 +50,7 @@ const userSchema = new mongoose.Schema(
     photourl: {
       type: String,
       default:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQD116U9ZCk8bEaanCeB5rSCC2uqY5Ka_2_EA&s",
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRISuukVSb_iHDfPAaDKboFWXZVloJW9XXiwGYFab-QwlAYQ3zFsx4fToY9ijcVNU5ieKk&usqp=CAU",
       validate(value) {
         if (!validator.isURL(value)) {
           throw new Error("Invalid URL");
