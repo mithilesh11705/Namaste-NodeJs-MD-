@@ -12,7 +12,7 @@ userRouter.get("/user/requests/received", userAuth, async (req, res) => {
     const connectionRequests = await ConnectionRequest.find({
       toUserId: loggedUserId,
       status: "interested",
-    }).populate("fromUserId", ["firstName", "lastName"]);
+    }).populate("fromUserId", ["firstName", "lastName", "photourl"]);
 
     res.json({
       message: "Data Fetched Successfully",
@@ -27,27 +27,36 @@ userRouter.get("/user/requests/received", userAuth, async (req, res) => {
 
 userRouter.get("/user/connections", userAuth, async (req, res) => {
   try {
-    const loggedUserId = req.user._id;
+    const loggedUserId = req.user._id.toString();
 
-    const connectionRequest = await ConnectionRequest.find({
-      $or: [
-        { fromUserId: loggedUserId, status: "accepted" },
-        { toUserId: loggedUserId, status: "accepted" },
-      ],
-    }).populate("fromUserId", ["firstName", "lastName"]);
+    const connectionRequests = await ConnectionRequest.find({
+      status: "accepted",
+      $or: [{ fromUserId: loggedUserId }, { toUserId: loggedUserId }],
+    })
+      .populate("fromUserId", "firstName lastName photourl") // Correct field population
+      .populate("toUserId", "firstName lastName photourl");
 
-    const data = connectionRequest.map((request) => {
-      return request.fromUserId._id.toString() === loggedUserId.toString()
-        ? request.toUserId
-        : request.fromUserId;
+    const connections = connectionRequests.map((request) => {
+      const from = request.fromUserId;
+      const to = request.toUserId;
+
+      const isFromLoggedIn = from._id.toString() === loggedUserId;
+      const otherUser = isFromLoggedIn ? to : from;
+
+      return {
+        _id: otherUser._id,
+        firstName: otherUser.firstName || "",
+        lastName: otherUser.lastName || "",
+        photourl: otherUser.photourl || "",
+      };
     });
 
     res.json({
-      message: "Data Fetched Successfully",
-      data,
+      message: "Connections fetched successfully",
+      connections,
     });
   } catch (err) {
-    res.status(400).send("Something went wrong" + err.message);
+    res.status(400).send("Something went wrong: " + err.message);
   }
 });
 
@@ -61,7 +70,7 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
     const loggedUserId = req.user._id;
     const page = parseInt(req.query.page) || 1;
     let limit = parseInt(req.query.limit) || 10;
-    limit=limit>50?50:limit;
+    limit = limit > 50 ? 50 : limit;
 
     const connectionRequest = await ConnectionRequest.find({
       $or: [
